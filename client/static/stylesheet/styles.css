@@ -1,0 +1,59 @@
+body {
+  width: 1000px;
+}
+div {
+    border: 1px solid #000000;
+}
+
+h1 {
+  color: red;
+}
+
+#partials li {
+  display: inline;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#partials li::before {
+  content: "|";
+}
+
+#partials li:first-child::before {
+  content: none;
+}
+
+a {
+  padding-left: 10px;
+}
+
+.side_bar{
+  width: 200px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.tables {
+  width: 700px;
+  display: inline-block;
+}
+.form-control {
+  vertical-align: top;
+}
+
+.tables ul {
+  list-style-type: none;
+  display: inline;
+}
+/*.ul {
+  width: 75px;
+  display: inline;
+}*/
+/*
+.tables li {
+  display: inline;
+}*/
+
+/*.ul {
+  display: inline;
+}*/

@@ -1,0 +1,23 @@
+<div ng-controller='customersController'>
+  <h3>Add another customer</h3>
+  <p><span ng-bind="errors"></span></p>
+  <form>
+    Name: <input type='text' ng-model='newCustomer.name'>
+    <input type='submit' value='add' ng-click='addCustomer()'>
+  </form>
+    <div class="col-sm-2" id='search'>
+      <input type='text' class='form-control' placeholder='search customers' ng-model="filter_name">
+    </div>
+    <table border="1">
+      <tr>
+        <th>Customer Name</th>
+        <th>Date Created</th>
+        <th>Action</th>
+      </tr>
+      <tr ng-repeat="customer in customers | filter:filter_name | orderBy: -1 * 'customer.created'">
+        <td><span ng-bind="customer.name"></span></td>
+        <td><span ng-bind="customer.created | date: 'MMMM d yyyy'"></span></td>
+        <td><button ng-click='destroyCustomer(customer._id)'>Delete</button></td>
+      </tr>
+    </table>
+  </div>

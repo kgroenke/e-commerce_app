@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html ng-app='myApp'>
+<head>
+  <link rel="stylesheet" href="/stylesheet/styles.css" type="text/css">
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.15/angular-ui-router.min.js"></script>
+  <script type="text/javascript">
+  var myApp = angular.module('myApp', ['ui.router']);
+
+   myApp.config(function($stateProvider){
+     $stateProvider
+
+     .state('dashboard', {
+       url:'/',
+       templateUrl: 'partials/dashboard.html'
+     })
+     .state('dash', {
+       url: '/dashboard',
+       templateUrl: '/partials/dashboard.html'
+     })
+     .state('customers', {
+       url: '/customers',
+       templateUrl: '/partials/customers.html'
+     })
+     .state('orders', {
+       url: '/orders',
+       templateUrl: '/partials/orders.html',
+       controller: 'ordersController'
+     })
+     .state('quant', {
+       parent: 'orders',
+       url:'/quant',
+       templateUrl: '/partials/orders.quant.html',
+       controller: 'ordersController'
+     })
+     .state('products', {
+       url: '/products',
+       templateUrl: '/partials/products.html',
+       controller: 'productsController'
+     })
+     .state('settings', {
+       url: '/settings',
+       templateUrl: '/settings.html'
+     })
+    //  .otherwise({
+    //    redirectTo: '/'
+    //  });
+   });
+   //customers factory
+   myApp.factory('customersFactory', function($http){
+     var customers = [];
+     var factory = {};
+     factory.getCustomers = function(callback){
+       $http.get('/customers').success(function(output){
+         customers = output;
+         callback(customers);
+       })
+     }
+     factory.addCustomer = function(info, callback){
+       $http.post('/customer/add', info).success(function(output){
+         if(output.errors){
+           if(output.errors.name){
+             var problems = output.errors.name.message
+             callback(problems)
+           }
+         }
+         else{
+           callback();
+         }
+       })
+     }
+     factory.destroyCustomer = function(id, callback){
+       $http.post('/customer/destroy/' + id).success(function(output){
+         callback()
+       })
+     }
+     return factory
+   });
+   //products factory
+   myApp.factory('productsFactory', function($http){
+     var products = [];
+     var range = []
+     var factory = {};
+     factory.getProducts = function(callback){
+       $http.get('/products').success(function(output){
+         console.log("get products output: ", output)
+         products = output;
+         callback(products);
+       })
+     }
+     factory.addProduct = function(info, callback){
+       $http.post('/product/add', info).success(function(output){
+         if(output.errors){
+           console.log("output", output.errors)
+           if(output.errors.name){
+             console.log(output.errors.name)
+             var problems = output.errors.name.message
+             callback(problems)
+           }
+           else{
+             var problems = output.errors
+             callback(problems)
+           }
+         }
+         else{
+           callback();
+         }
+       })
+     }
+     factory.quantProduct = function(data, callback){
+       console.log("in getQuant", data.product_id)
+       for(var x=0; x < data.products.length; x ++){
+         if (data.products[x]._id == data.product_id){
+           console.log("MATCH!")
+           for(var i=0; i <= data.products[x].inventory; i++){
+             range.push(i)
+             console.log("pushed num to range")
+           }
+           console.log("returning callback(range)", range)
+           return callback(range)
+         }
+       }
+       console.log("executing callback")
+       callback(range)
+     }
+     return factory
+   })
+   // users factory
+   myApp.factory('ordersFactory', function($http){
+     var users = []
+     var orders = []
+     var factory = {}
+
+     factory.getOrders = function(callback){
+       $http.get('/orders').success(function(output){
+         orders = output;
+         callback(orders);
+       })
+     }
+     factory.addOrder = function(info, callback){
+       console.log("add order factory data, ", info)
+       $http.post('/order/add', info).success(function(output){
+         console.log("successfully made a post request to /order/add")
+          callback()
+       })
+     }
+
+     return factory
+   })
+   //customers controller
+   myApp.controller('customersController', function($scope, customersFactory){
+     $scope.customers = [];
+    //  get all customers
+     customersFactory.getCustomers(function(data){
+       $scope.customers = data;
+     })
+     // add a customer to the database
+    $scope.addCustomer = function(){
+      $scope.errors = ""
+      customersFactory.addCustomer($scope.newCustomer, function(errors){
+        if(errors){
+          console.log("found an error!!");
+          $scope.errors = errors;
+        }
+        else{
+          console.log("Successfully added customer!")
+          customersFactory.getCustomers(function(data){
+            $scope.customers = data;
+          })
+        }
+        $scope.newCustomer = {};
+      })
+    }
+    //delete a customer from the database
+    $scope.destroyCustomer = function(customer){
+      customersFactory.destroyCustomer(customer, function(){
+        customersFactory.getCustomers(function(data) {
+          $scope.customers = data;
+        })
+      })
+    }
+   })
+   //products controller
+   myApp.controller('productsController', function($scope, productsFactory){
+     $scope.products = [];
+     productsFactory.getProducts(function(data){
+       $scope.products = data;
+     })
+     //add a product to the database
+     $scope.addProduct = function(){
+       $scope.errors = ""
+       productsFactory.addProduct($scope.newProduct, function(errors){
+         if(errors){
+          //  console.log("found an error!", errors);
+           $scope.errors = errors;
+           console.log("$scope.errors", $scope.errors)
+         }
+         else{
+           console.log("Successfully added product")
+         }
+         $scope.newProduct = {};
+       })
+     }
+   })
+   //orders controller
+   myApp.controller('ordersController', function($scope, $state, ordersFactory, productsFactory, customersFactory){
+     $scope.customers = [];
+     $scope.orders = [];
+     $scope.products = [];
+     customersFactory.getCustomers(function(data){
+       $scope.customers = data
+     })
+     productsFactory.getProducts(function(data){
+       $scope.products = data
+     })
+     ordersFactory.getOrders(function(data){
+       $scope.orders = data
+     })
+    $scope.addOrder = function(){
+      ordersFactory.addOrder($scope.newOrder, function(){
+        console.log("back at add order function in controller")
+      })
+      $scope.newOrder = {};
+    }
+    $scope.changeState = function () {
+      var quantData = {
+        product_id: $scope.newOrder.product,
+        products: $scope.products
+      }
+      productsFactory.quantProduct(quantData, function(data){
+        $scope.range = data;
+        $state.transitionTo('quant');
+      })
+    };
+   })
+  </script>
+</head>
+<body>
+  <div id="partials">
+    <ul>
+      <li><a href="#/dashboard">Dashboard</a></li>
+      <li><a href="#/products">Products</a></li>
+      <li><a href="#/orders">Orders</a></li>
+      <li><a href="#/customers">Customers</a></li>
+      <li><a href="#/settings">Settings</a></li>
+    </ul>
+  </div>
+  <div ui-view>
+  </div>
+</body>
+</html>

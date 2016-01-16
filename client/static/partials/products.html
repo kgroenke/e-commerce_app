@@ -1,0 +1,31 @@
+
+<div class="side_bar">
+  <input type='text' class='form-control' placeholder='search products' ng-model="filter_name">
+  <h4>Add a new product</h4>
+  <p>{{errors}}</p>
+  <form>
+    Name:<br><input type="text" ng-model='newProduct.name'><br>
+    Image(url):<br><input type="text" ng-model='newProduct.url'><br>
+    Description:<br><textarea ng-model='newProduct.description'></textarea><br>
+    Initial Quantity:<br><input type="text" ng-model='newProduct.quantity'><br>
+    <input type="submit" value="Submit" ng-click='addProduct()'>
+  </form>
+</div>
+<div class="tables">
+  <div>
+  <h4>Products</h4>
+  <div>
+    <div class = "ul" ng-repeat="product in products | filter:filter_name | orderBy: 'product.created'">
+      <img src={{product.url}} height="50" width="50"><br>
+      <p>{{product.name}}</p>
+      <p>({{product.inventory}}) left</p>
+    </div>
+    <!-- <ul ng-repeat="product in products | filter:filter_name | orderBy: 'product.created'">
+      <li><img src={{product.url}} height="50" width="50"></li>
+      <li>{{product.name}}</li>
+      <li>({{product.inventory}}) left</li>
+    </ul> -->
+  <div>
+  <a>Show more</a>
+  </div>
+</div>
